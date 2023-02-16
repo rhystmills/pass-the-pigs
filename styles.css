@@ -1,0 +1,19 @@
+* {
+    font-family: sans-serif;
+}
+
+.warning { 
+    color: red;
+}
+
+.hidden {
+    display: none;
+}
+
+.hidden {
+    color: blue;
+}
+
+.flannge {
+    color: blue;
+}
