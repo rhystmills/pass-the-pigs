@@ -96,7 +96,10 @@ class Player {
 }
 
 const initialise = () => {
-    hideInactiveScreens();
+    showOnlyActiveScreen();
+    (document.getElementById("gameStartButton")).addEventListener("mousedown", () => {
+        advanceScreen("nameSummaryScreen", "gameScreen");
+    })
 }
 
 const giveWarning = (elementId, text) => {
@@ -105,12 +108,13 @@ const giveWarning = (elementId, text) => {
     warningEl.append(warningText)
 }
 
-const setScreenVisible = (screen, visible) => {
-    const screenEl = document.getElementById(screen);
+const setElementVisible = (elementId, visible) => {
+    const element = document.getElementById(elementId);
+    console.log({element, elementId})
     if (visible) {
-        screenEl.classList.remove("hidden");
+        element.classList.remove("hidden");
     } else {
-        screenEl.classList.add("hidden");
+        element.classList.add("hidden");
     }
 }
 
@@ -118,21 +122,25 @@ const showOnlyActiveScreen = () => {
     screens.all
         .forEach(screen => {
             if (screen === screens.current){
-                setScreenVisible(screen, true)
+                setElementVisible(screen, true)
             } else {
-                setScreenVisible(screen, false)
+                setElementVisible(screen, false)
             }
         })
 }
 
 const screens = {
-    all: ["welcomeScreen", "nameScreen"],
+    all: ["welcomeScreen", "nameScreen", "nameSummaryScreen", "gameScreen"],
     current: "welcomeScreen"
 }
 
 const advanceScreen = (elementToHide, elementToShow) => {
-    screens.current = elementToShow;
-    showOnlyActiveScreen();
+    setElementVisible(elementToHide, false);
+    setElementVisible(elementToShow, true);
+    if (screens.all.includes(elementToShow)){
+        screens.current = welcomeScreen;
+    }
+
 }
 
 const submitPlayers = (event) => {
@@ -141,7 +149,8 @@ const submitPlayers = (event) => {
     const desiredPlayers = event.target[0].value;
     if (desiredPlayers < config.maxPlayers){
         gameData.playerTotal = event.target[0].value;
-        advanceScreen("welcomeScreen", "nameScreen")
+        createNameElements(gameData.playerTotal);
+        advanceScreen("welcomeScreen", "nameScreen");
     } else {
         giveWarning("playerTotalWarning", `Please choose less than ${config.maxPlayers} players.`)
     }
@@ -150,10 +159,48 @@ const submitPlayers = (event) => {
     // move to next screen if it's valid
 }
 
+const submitPlayerNumber = (event) => {
+    event.preventDefault();
+    const desiredName = event.target[0].value;
+    if (desiredName && desiredName !== ""){
+        gameData.players.push(new Player(desiredName))
+        const playerid = event.target.dataset.playerid;
+        console.log({event})
+        if (playerid < gameData.playerTotal-1){
+            // There are players left to name
+            advanceScreen(`playerNameElement${playerid}`, `playerNameElement${Number(playerid)+1}`);
+        } else {
+            const playerSummary = document.getElementById("playerSummary");
+            gameData.players.forEach((player,i) => {
+                const playerDiv = document.createElement("div");
+                playerDiv.innerHTML = `<p><strong>Player ${i+1}: ${player.name}</strong><p>`
+                playerSummary.appendChild(playerDiv);
+            })
+            advanceScreen(`nameScreen`, `nameSummaryScreen`);
+        }
+    }
+}
+
 const playerNumberForm = document.getElementById("playerNumberForm");
 playerNumberForm.addEventListener("submit", submitPlayers)
 
+const createNameElement = (number, active) => {
+    const playerNameElement = document.createElement("div");
+    playerNameElement.classList.add(active ? "active" : "hidden");
+    playerNameElement.id = `playerNameElement${number}`;
+    playerNameElement.innerHTML = `<h1>Player ${number + 1}:</h1><form method="get" id="playerNameForm${number}" data-playerid="${number}"><label>Please choose a name:<input type="name" value=""></label><button>Save</button></form>`
+    return playerNameElement;
+}
 
+const createNameElements = (numberOfPlayers) => {
+    const nameScreen = document.getElementById("nameScreen");
+    for (let i = 0; i < numberOfPlayers; i++){
+        const playerNameElement = createNameElement(i, i===0 ? true : false);
+        nameScreen.appendChild(playerNameElement);
+        const nameForm = document.getElementById(`playerNameForm${i}`)
+        nameForm.addEventListener("submit", submitPlayerNumber);
+    }
+}
 
 // Screens:
 // how many players

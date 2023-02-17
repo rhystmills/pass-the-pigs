@@ -12,14 +12,21 @@
         <h1>Welcome to pass the pigs</h1>
         <form method="get" id="playerNumberForm">
             <label>How many players are there?
-                <input id="number" type="number" value="42">
+                <input id="number" type="number" value="4">
             </label>
             <button>Save</button>
             <p class="warning" id="playerTotalWarning" role="alert"></p>
         </form>
     </section>
     <section id="nameScreen" class="hidden">
-        <p>whaddup</p>
+    </section>
+    <section id="nameSummaryScreen" class="hidden">
+        <h1>Playing:</h1>
+        <div id="playerSummary"></div>
+        <button id="gameStartButton">Start Game</button>
+    </section>
+    <section id="gameScreen" class="hidden">
+        <h1>Game</h1>
     </section>
     <!-- Code ends -->
     <script src="script.js"></script>
