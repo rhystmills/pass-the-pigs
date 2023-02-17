@@ -7,32 +7,38 @@ const rolls = {
     sideDot: {
         probability: 349,
         points: 5,
-        name: "Side (dot)"
+        name: "Side (dot)",
+        id: "sideDot"
     },
     sideBlank: {
         probability: 302,
         points: 5,
-        name: "Side (no dot)"
+        name: "Side (no dot)",
+        id: "sideBlank"
     },
     razorback: {
         probability: 224,
         points: 5,
-        name: "Razorback"
+        name: "Razorback",
+        id: "razorback"
     },
     trotter: {
         probability: 88,
         points: 5,
-        name: "Trotter"
+        name: "Trotter",
+        id: "trotter"
     },
     snouter: {
         probability: 30,
         points: 5,
-        name: "Snouter"
+        name: "Snouter",
+        id: "snouter"
     },
     jowler: {
         probability: 6,
         points: 5,
-        name: "Leaning Jowler"
+        name: "Leaning Jowler",
+        id: "jowler"
     },
 }
 
@@ -42,7 +48,12 @@ const config = {
 
 const gameData = {
     playerTotal: null,
-    players: []
+    players: [],
+    currentPlayer: null,
+    pigs: {
+        left: "trotter",
+        right: "trotter"
+    }
 }
 
 class Game {
@@ -97,19 +108,36 @@ class Player {
 
 const initialise = () => {
     showOnlyActiveScreen();
-    (document.getElementById("gameStartButton")).addEventListener("mousedown", () => {
+    (getEl("gameStartButton")).addEventListener("mousedown", () => {
+        createGameFrame(0);
         advanceScreen("nameSummaryScreen", "gameScreen");
     })
 }
 
+/** @type {(elementId: string) => HTMLElement} */
+const getEl = (elementId) => document.getElementById(elementId);
+
+/** @type {(element: string) => HTMLElement} */
+const createEl = (element) =>  document.createElement(element);
+
+/** @type {(text: string) => HTMLElement} */
+const createTextNode = (text) => document.createTextNode(text);
+
+
+const wipeElement = (element) => {
+    while (element.firstChild) {
+        myNode.removeChild(myNode.lastChild);
+    }
+}
+
 const giveWarning = (elementId, text) => {
-    const warningEl = document.getElementById(elementId);
-    const warningText = document.createTextNode(text)
+    const warningEl = getEl(elementId);
+    const warningText = createTextNode(text)
     warningEl.append(warningText)
 }
 
 const setElementVisible = (elementId, visible) => {
-    const element = document.getElementById(elementId);
+    const element = getEl(elementId);
     console.log({element, elementId})
     if (visible) {
         element.classList.remove("hidden");
@@ -170,9 +198,9 @@ const submitPlayerNumber = (event) => {
             // There are players left to name
             advanceScreen(`playerNameElement${playerid}`, `playerNameElement${Number(playerid)+1}`);
         } else {
-            const playerSummary = document.getElementById("playerSummary");
+            const playerSummary = getEl("playerSummary");
             gameData.players.forEach((player,i) => {
-                const playerDiv = document.createElement("div");
+                const playerDiv = createEl("div");
                 playerDiv.innerHTML = `<p><strong>Player ${i+1}: ${player.name}</strong><p>`
                 playerSummary.appendChild(playerDiv);
             })
@@ -181,11 +209,11 @@ const submitPlayerNumber = (event) => {
     }
 }
 
-const playerNumberForm = document.getElementById("playerNumberForm");
+const playerNumberForm = getEl("playerNumberForm");
 playerNumberForm.addEventListener("submit", submitPlayers)
 
 const createNameElement = (number, active) => {
-    const playerNameElement = document.createElement("div");
+    const playerNameElement = createEl("div");
     playerNameElement.classList.add(active ? "active" : "hidden");
     playerNameElement.id = `playerNameElement${number}`;
     playerNameElement.innerHTML = `<h1>Player ${number + 1}:</h1><form method="get" id="playerNameForm${number}" data-playerid="${number}"><label>Please choose a name:<input type="name" value=""></label><button>Save</button></form>`
@@ -193,14 +221,35 @@ const createNameElement = (number, active) => {
 }
 
 const createNameElements = (numberOfPlayers) => {
-    const nameScreen = document.getElementById("nameScreen");
+    const nameScreen = getEl("nameScreen");
     for (let i = 0; i < numberOfPlayers; i++){
         const playerNameElement = createNameElement(i, i===0 ? true : false);
         nameScreen.appendChild(playerNameElement);
-        const nameForm = document.getElementById(`playerNameForm${i}`)
+        const nameForm = getEl(`playerNameForm${i}`)
         nameForm.addEventListener("submit", submitPlayerNumber);
     }
 }
+
+/** @type {(pigName: string, position: string) => HTMLElement} */
+const getPigImage = (pigName, position) => {
+    const pig = createEl("img");
+    pig.setAttribute("src", `./images/${pigName}.gif`)
+    return pig
+}
+
+const createGameFrame = (playerId) => {
+    const gameFrame = getEl("gameFrame");
+    const pigBlanket = getEl("pigBlanket");
+    const pigLeft = getPigImage(gameData.pigs.left);
+    const pigRight = getPigImage(gameData.pigs.right);
+    console.log({pigBlanket})
+    wipeElement(pigBlanket);
+    console.log({pigBlanket})
+
+    pigBlanket.appendChild(pigLeft);
+    pigBlanket.appendChild(pigRight);
+}
+
 
 // Screens:
 // how many players
