@@ -7,14 +7,14 @@ const rolls = {
     sideDot: {
         probability: 349,
         cumulative: 349,
-        points: 5,
+        points: 0,
         name: "Side (dot)",
         id: "sideDot"
     },
     sideBlank: {
         probability: 302,
         cumulative: 651,
-        points: 5,
+        points: 0,
         name: "Side (no dot)",
         id: "sideBlank"
     },
@@ -35,13 +35,13 @@ const rolls = {
     snouter: {
         probability: 30,
         cumulative: 993,
-        points: 5,
+        points: 10,
         name: "Snouter",
         id: "snouter"
     },
     jowler: {
         probability: 7,
-        points: 5,
+        points: 15,
         cumulative: 1000,
         name: "Leaning Jowler",
         id: "jowler"
@@ -50,8 +50,9 @@ const rolls = {
 
 const totalProbabilities = Object.values(rolls).reduce((acc, cur) => acc + cur.probability, 0)
 
-const getRolledPosition = (number) =>  Object.values(rolls).sort((a,b) => a.cumulative - b.cumulative).find(roll => number <= roll.cumulative).id;
-console.log(getRolledPosition);
+const getRolledPositionId = (number) => Object.values(rolls).sort((a,b) => a.cumulative - b.cumulative).find(roll => number <= roll.cumulative).id;
+const getRolledPosition = (number) => rolls[getRolledPositionId(number)];
+
 
 const config = {
     maxPlayers: 100
@@ -93,8 +94,10 @@ class Player {
     }
     nextPlayer = () => {
         this.setActive(false);
+        this.roundScore = 0;
         const nextPlayerId = getNextPlayer(this.id);
         gameData.currentPlayer = nextPlayerId;
+        return gameData.players[nextPlayerId]
         //TODO: mechanism for going to next player?
     }
     addToRoundScore = (num) => {
@@ -104,26 +107,62 @@ class Player {
     
     stick = () => {
         this.#totalScore += this.roundScore;
-        this.nextPlayer();
+    }
+    individualRoll = () => {
+        const roll = Math.ceil(Math.random() * 1000);
+        return getRolledPosition(roll)
     }
     roll = () => {
-        const roll = Math.ceil(Math.random() * 1000);
-        const positionId = getRolledPosition(roll)
-        console.log({roll, positionId});
-
-        //TODO: do two rolls
-        // Work out combined score
-        // Add to tempscore Or end go
-        // If pigOut - go to next player
+        if (Math.ceil(Math.random() * 1000) === 1){
+            this.oinker();
+            return "Oinker"
+        }
+        const combinedRolls = [
+            this.individualRoll(),
+            this.individualRoll()
+        ]
+        
+        const [rollOne, rollTwo] = combinedRolls;
+        gameData.pigs.left = rollOne.id;
+        gameData.pigs.right = rollTwo.id;
+        console.log(combinedRolls)
+        console.log(gameData)
+        // TODO: update the images
+        if (rollOne === rollTwo){
+            // Double roll
+            if (rollOne.id === "sideDot" || rollOne.id === "sideBlank"){
+                this.addToRoundScore(1);
+            } else (
+                this.addToRoundScore(rollOne.points * 4)
+            )
+        } else {
+            const rollIds = combinedRolls.map(roll => roll.id)
+            if (rollIds.includes("sideDot") && rollIds.includes("sideBlank")){
+                this.pigOut();
+                return "Pig out";
+            } else {
+                this.addToRoundScore(rollOne.points);
+                this.addToRoundScore(rollTwo.points);
+            }
+        }
+        if (this.roundScore + this.getTotalScore() > 100) {
+            this.#totalScore += this.roundScore;
+            return "Winner"
+        }
+        
+        // }
+        // TODO:
+        // Oinker
+        // unnatural position
+        
     }
     pigOut = () => {
         this.roundScore = 0;
-        this.nextPlayer();
+        this.setActive(false);
     }
     oinker = () => {
         this.roundScore = 0;
         this.#totalScore = 0;
-        this.nextPlayer();
     }
 }
 
@@ -147,7 +186,7 @@ const createTextNode = (text) => document.createTextNode(text);
 
 const wipeElement = (element) => {
     while (element.firstChild) {
-        myNode.removeChild(myNode.lastChild);
+        element.removeChild(element.lastChild);
     }
 }
 
@@ -159,7 +198,6 @@ const giveWarning = (elementId, text) => {
 
 const setElementVisible = (elementId, visible) => {
     const element = getEl(elementId);
-    console.log({element, elementId})
     if (visible) {
         element.classList.remove("hidden");
     } else {
@@ -194,14 +232,14 @@ const advanceScreen = (elementToHide, elementToShow) => {
 
 const submitPlayers = (event) => {
     event.preventDefault();
-    // console.log(event.target[0].value)
     const desiredPlayers = event.target[0].value;
-    if (desiredPlayers < config.maxPlayers){
+    if (desiredPlayers < config.maxPlayers && desiredPlayers > 0){
         gameData.playerTotal = event.target[0].value;
         createNameElements(gameData.playerTotal);
         advanceScreen("welcomeScreen", "nameScreen");
+        getEl('playerNameInput0').focus();
     } else {
-        giveWarning("playerTotalWarning", `Please choose less than ${config.maxPlayers} players.`)
+        giveWarning("playerTotalWarning", `Please choose between 1 and ${config.maxPlayers - 1} players.`)
     }
     
     // validate input
@@ -212,21 +250,21 @@ const nextPlayerIsPlayerZero = (playerId) => playerId < gameData.playerTotal - 1
 
 const getNextPlayer = (playerId) => nextPlayerIsPlayerZero(playerId) ? 0 : playerId + 1;
 
-const submitPlayerNumber = (event) => {
+const submitPlayerName = (event) => {
     event.preventDefault();
     const desiredName = event.target[0].value;
     if (desiredName && desiredName !== ""){
-        gameData.players.push(new Player(desiredName))
+        gameData.players.push(new Player(desiredName, gameData.players.length));
         const playerid = event.target.dataset.playerid;
-        console.log({event})
         if (!nextPlayerIsPlayerZero(playerid)){
             // There are players left to name
             advanceScreen(`playerNameElement${playerid}`, `playerNameElement${Number(playerid)+1}`);
+            getEl(`playerNameInput${Number(playerid)+1}`).focus();
         } else {
             const playerSummary = getEl("playerSummary");
             gameData.players.forEach((player,i) => {
                 const playerDiv = createEl("div");
-                playerDiv.innerHTML = `<p><strong>Player ${i+1}: ${player.name}</strong><p>`
+                playerDiv.innerHTML = `<p><strong>Player ${i+1}:</strong> ${player.name}<p>`
                 playerSummary.appendChild(playerDiv);
             })
             advanceScreen(`nameScreen`, `nameSummaryScreen`);
@@ -235,70 +273,159 @@ const submitPlayerNumber = (event) => {
 }
 
 const playerNumberForm = getEl("playerNumberForm");
-playerNumberForm.addEventListener("submit", submitPlayers)
+playerNumberForm.addEventListener("submit", submitPlayers);
 
 const createNameElement = (number, active) => {
     const playerNameElement = createEl("div");
     playerNameElement.classList.add(active ? "active" : "hidden");
     playerNameElement.id = `playerNameElement${number}`;
-    playerNameElement.innerHTML = `<h1>Player ${number + 1}:</h1><form method="get" id="playerNameForm${number}" data-playerid="${number}"><label>Please choose a name:<input type="name" value=""></label><button>Save</button></form>`
+    playerNameElement.innerHTML = `<h1>Player ${number + 1}:</h1><form method="get" id="playerNameForm${number}" data-playerid="${number}"><label>Please choose a name:<input type="name" value="" id="playerNameInput${number}"></label><button class="metalButton">Save</button></form>`
     return playerNameElement;
 }
 
 const createNameElements = (numberOfPlayers) => {
     // TODO: focus the input
-    const nameScreen = getEl("nameScreen");
+    const nameSection = getEl("nameSection");
     for (let i = 0; i < numberOfPlayers; i++){
         const playerNameElement = createNameElement(i, i===0 ? true : false);
-        nameScreen.appendChild(playerNameElement);
+        nameSection.appendChild(playerNameElement);
         const nameForm = getEl(`playerNameForm${i}`)
-        nameForm.addEventListener("submit", submitPlayerNumber);
+        nameForm.addEventListener("submit", submitPlayerName);
     }
 }
 
-/** @type {(pigName: string, position: string) => HTMLElement} */
-const getPigImage = (pigName, position) => {
-    const pig = createEl("img");
-    pig.setAttribute("src", `./images/${pigName}.gif`)
-    return pig
+/** @type {(pigName: string) => HTMLElement} */
+const setPigImage = (pigEl, pigName) => {
+    console.log(pigName)
+    pigEl.src = `./images/${pigName}.gif`;
+    return pigEl
+}
+
+const updatePigImages = (rollResult) => {
+    const pigBlanket = getEl("pigBlanket");
+    const [leftPig, rightPig] = pigBlanket.children;
+    console.log({children: pigBlanket.children})
+    if (rollResult === "Oinker"){
+        setPigImage(leftPig, "baconLeft");
+        setPigImage(rightPig, "baconRight");
+    } else {
+        setPigImage(leftPig, gameData.pigs.left);
+        setPigImage(rightPig, gameData.pigs.right);
+    }
+}
+
+const updateRoundScore = (score) => {
+    const roundScoreEl=getEl("roundScore");
+    wipeElement(roundScoreEl);
+    roundScoreEl.append(createTextNode(score));
+}
+
+const enableNextPlayerElements = (shouldShow, message) => {
+    setElementVisible("nextPlayerMessage", shouldShow);
+    getEl("nextPlayerButton").disabled = !shouldShow;
+
+    if (message) {
+        const nextPlayerMessage = getEl("nextPlayerMessage");
+        wipeElement(nextPlayerMessage);
+        nextPlayerMessage.append(createTextNode(message))
+    }
+}
+
+const updatePlayerFields = (player) => {
+    const totalScoreEl=getEl("totalScore");
+    const currentPlayerEl=getEl("currentPlayer");
+    wipeElement(totalScoreEl);
+    wipeElement(currentPlayerEl);
+    const totalScore = player.getTotalScore();
+    totalScoreEl.append(createTextNode(totalScore));
+    currentPlayerEl.append(createTextNode(player.name));
+}
+
+const showWinnerMessage = (message) => {
+    setElementVisible("winner", true);
+    getEl("winnerMessage").append(createTextNode(message))
+    getEl("winnerButton").addEventListener("mousedown", (e) => {
+        populateScoreTable();
+        advanceScreen("gameScreen", "gameSummaryScreen");
+    })
+}
+
+const populateScoreTable = () => {
+    const scoreTable = document.getElementById("gameSummary");
+    gameData.players.forEach(player => {
+        const playerRow = createEl("tr");
+        playerRow.innerHTML = `<td>${player.name}</td><td>${player.getTotalScore()}</td>`
+        scoreTable.appendChild(playerRow);
+    })
+}
+
+const rollButton=getEl("rollButton");
+const stickButton=getEl("stickButton");
+
+const enablePlayButtons = (enable) => {
+    rollButton.disabled = !enable;
+    stickButton.disabled = !enable;
 }
 
 const createGameFrame = (playerId) => {
     const gameFrame = getEl("gameFrame");
-    const pigBlanket = getEl("pigBlanket");
-    const totalScoreEl=getEl("totalScore");
-    const roundScoreEl=getEl("roundScore");
-    const currentPlayerEl=getEl("currentPlayer");
-    const rollButton=getEl("rollButton");
+    let player = gameData.players[playerId];
 
-    const pigLeft = getPigImage(gameData.pigs.left);
-    const pigRight = getPigImage(gameData.pigs.right);
+    updatePigImages();
+    updateRoundScore(0);
+    updatePlayerFields(gameData.players[playerId])
 
-    const player = gameData.players[playerId];
-    const totalScore = player.getTotalScore();
-    console.log({player, playerId, totalScore})
-    totalScoreEl.append(createTextNode(totalScore));
-    roundScoreEl.append(createTextNode(0));
-    currentPlayerEl.append(createTextNode(player.name));
+    rollButton.addEventListener("mousedown", (e) => {
+        const [leftPig, rightPig] = getEl("pigBlanket").children;
+        enablePlayButtons(false);
+        const intervals = [rollImage(leftPig), rollImage(rightPig)];
+        setTimeout(() => {
+            intervals.forEach((interval) => clearInterval(interval));
+            enablePlayButtons(true);
+            const rollResult = player.roll()
+            if (rollResult === "Oinker") {
+                enablePlayButtons(false);
+                enableNextPlayerElements(true, "Makin' bacon!");
+            }
+            updateRoundScore(player.roundScore);
+            updatePigImages(rollResult);
+            if (rollResult === "Pig out") {
+                enablePlayButtons(false);
+                enableNextPlayerElements(true, "Pig out!");
+            }
+            if (rollResult === "Winner") {
+                enablePlayButtons(false);
+                showWinnerMessage(`${player.name} wins with ${player.getTotalScore()} points!`);
+            }
+        }, 1000);
 
-    pigBlanket.appendChild(pigLeft);
-    pigBlanket.appendChild(pigRight);
+       
+    })
 
-    rollButton.addEventListener("mousedown",(e) => {
-        player.roll()
+    stickButton.addEventListener("mousedown", (e) => {
+        player.stick();
+        enablePlayButtons(false);
+        enableNextPlayerElements(true, `Stuck with ${player.getTotalScore()} points.`);
+    })
+
+    nextPlayerButton.addEventListener("mousedown", (e) => {
+        player = player.nextPlayer();
+        updatePlayerFields(player);
+        updateRoundScore(0);
+        enablePlayButtons(true);
+        enableNextPlayerElements(false);
     })
 }
 
-
-// Screens:
-// how many players
-// Loop [player n name]
-//   until all are named
-// Loop [player n starts - stick or roll until they fail or pass]
-//   until there's a winner 
-// Game summary card
-
-// Have hidden sections already on the page - show them based on game logic.
-// The loop sections will have to be generated programmatically 
+const positions = Object.keys(rolls);
+const rollImage = (imageEl) => {
+    let image = "";
+    const interval = setInterval(() => {
+        const possiblePositions = positions.filter(position => position !== image)
+        image = possiblePositions[Math.floor(Math.random()*possiblePositions.length)];
+        imageEl.src = `./images/${image}.gif`;
+    }, 100)
+    return interval;
+}
 
 initialise();

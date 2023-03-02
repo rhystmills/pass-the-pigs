@@ -1,5 +1,8 @@
 * {
-    font-family: sans-serif;
+    font-family: 'Arial', Courier, monospace;
+    color: whitesmoke;
+    margin: 0;
+    padding: 0;
 }
 
 .warning { 
@@ -16,4 +19,167 @@
 
 .flannge {
     color: blue;
+}
+
+#pigBlanket{
+    min-height: auto;
+    padding: 4px;
+}
+
+main {
+    width: 194px;
+    height: 258px;
+    padding: 8px;
+    box-sizing: border-box;
+	image-rendering: pixelated;
+    font-size: 14px;
+    font-smooth: never;
+    -webkit-font-smoothing : none;
+    -moz-osx-font-smoothing: grayscale;
+    border: 1px outset whitesmoke;
+    background-color: lightgray;
+    scrollbar-color: lightgray gray;
+    background-image: url(./images/wood.png);
+}
+section {
+    background-image: url(./images/green3.png);
+    box-shadow: inset 3px 4px 15px -4px rgba(0,0,0,0.65);
+    padding: 8px;
+    min-height: auto;
+    margin: -2px;
+    border-radius: 4px;
+}
+.sectionWrapper {
+    /* padding:4px; */
+    border-radius: 4px;
+    border-width: 4px;
+    border-style: solid;
+    border-image: url(./images/border4.png) 4;
+    /* box-shadow: inset -1px -1px rgba(255, 255, 255, 0.5), inset 1px 1px rgba(0, 0, 0, 0.5), inset -2px -2px rgba(255, 255, 255, 0.5), inset 2px 2px rgba(0, 0, 0, 0.5); */
+}
+h1 {
+    font-size: 16px;
+}
+
+label, input, p, label, button {
+    margin: 0;
+    margin-top: 4px;
+}
+
+button {
+    margin-top: 8px;
+}
+
+input {
+    width: 183px;
+}
+
+input, button {
+    color: black;
+}
+
+.flex {
+    display: flex;
+    flex-direction: row;
+}
+
+.smallImg {
+    width: 40px;
+    margin-right: 4px;
+}
+
+input[type=text], input[type=name], input[type=number] {
+    width: 100%;
+    outline: none;
+    border: none;
+    background-color: #fff;
+    box-shadow: inset -1px -1px #9d9b91, inset 1px 1px #5c5a52, inset -2px -2px #c4c2b8, inset 2px 2px #363531;
+    box-sizing: border-box;
+    padding:6px 8px;
+}
+
+
+button.gameButton {
+    background-color: silver;
+    border: 2px whitesmoke outset;
+    outline: 1px dimgray solid;
+    font-family: Arial;
+    font-weight: 700;
+    color: MediumVioletRed;
+    padding: 2px 4px;
+    margin-left: 1px;
+}
+button.gameButton:hover {
+    cursor: pointer;
+	background-color: gainsboro;
+}
+button.gameButton:active {
+    border: 2px silver inset;
+}
+button.gameButton:disabled {
+    background-color: darkgray;
+    border: 2px gainsboro outset;
+    color: DarkMagenta;
+    filter: saturate(0);
+}
+button.gameButton:disabled:hover, button:disabled:active {
+    cursor:not-allowed;
+}
+
+#playerSummary {
+    overflow-y: auto;
+    max-height: 160px;
+}
+
+.tableWrapper {
+    max-height: 160px;
+    overflow-y: auto;
+    overflow-x: clip;
+}
+
+.gameMenu {
+    display: flex;
+    flex-direction: row;
+    margin: 0px 2px;
+    justify-content: space-between;
+}
+
+button.metalButton {
+    outline: none;
+    border: none;
+    background: lightgray;
+    box-shadow: inset -1px -1px #363531, inset 1px 1px #fffdf0, inset -2px -2px #5c5a52, inset 2px 2px #f5f1d7, 2px 2px 12px -5px rgba(0,0,0,0.58);;
+    padding: 6px 8px;
+    background-image: linear-gradient(139deg, rgba(255,255,255,0.04) 2%, rgba(255,255,255,0.2) 8%, rgba(255,255,255,0.5) 35%, rgba(255,255,255,0.3) 39%, rgba(255,255,255,0) 81%, rgba(255,255,255,0.5013644366197183) 84%, rgba(255,255,255,0) 100%), -webkit-radial-gradient(top center, ellipse cover, rgba(255,255,255,0.2) 0%,rgba(0,0,0,0.5) 100%), -webkit-radial-gradient(top center, ellipse cover, rgba(255,255,255,0.5) 0%,rgba(255,255, 255,0.2) 80%), url(./images/gold.png);
+    filter: saturate(3);
+}
+
+.gameMenu button {
+    padding: 0;
+    width: 56px;
+}
+.gameMenu button img {
+    margin: -6px;
+}
+
+button.metalButton:hover {
+    cursor: pointer;
+	filter: saturate(3) brightness(1.1)
+}
+button.metalButton img {
+    filter: saturate(0.33);
+}
+button.metalButton:active:enabled {
+    box-shadow: inset -1px -1px #fffdf0, inset 1px 1px #363531, inset -2px -2px #f5f1d7, inset 2px 2px #5c5a52;
+}
+button.metalButton:disabled {
+    background-color: darkgray;
+    filter: grayscale(1);
+}
+button.metalButton:disabled:hover, .gameMenu:disabled:active {
+    cursor:not-allowed;
+}
+
+.topMargin {
+    margin-top: 4px;
 }

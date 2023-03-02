@@ -8,32 +8,63 @@
 
 <body id="body">
     <!-- Code starts -->
-    <section id="welcomeScreen">
-        <h1>Welcome to pass the pigs</h1>
-        <form method="get" id="playerNumberForm">
-            <label>How many players are there?
-                <input id="number" type="number" value="4">
-            </label>
-            <button>Save</button>
-            <p class="warning" id="playerTotalWarning" role="alert"></p>
-        </form>
-    </section>
-    <section id="nameScreen" class="hidden">
-    </section>
-    <section id="nameSummaryScreen" class="hidden">
-        <h1>Playing:</h1>
-        <div id="playerSummary"></div>
-        <button id="gameStartButton">Start Game</button>
-    </section>
-    <section id="gameScreen" class="hidden">
-        <div id="gameFrame"></div>
-        <p><strong>Current player: </strong><span id="currentPlayer"></span></p>
-        <div id="pigBlanket"></div>
-        <p><strong>Total score: </strong><span id="totalScore"></span></p>
-        <p><strong>Round score: </strong><span id="roundScore"></span></p>
-        <button id="rollButton">Roll</button>
-        <button id="stickButton">Stick</button>
-    </section>
+    <main>
+        <div class="sectionWrapper" id="welcomeScreen">
+            <section>
+                <div class="flex flexHorizontal">
+                    <img src="./images/trotter.gif" class="smallImg">
+                    <h1>Welcome to Pass&nbsp;the&nbsp;Pigs</h1>
+                </div>
+                <form method="get" id="playerNumberForm">
+                    <label>How many players are there?
+                        <input id="number" type="number" value="2">
+                    </label>
+                    <button class="metalButton">Save</button>
+                    <p class="warning" id="playerTotalWarning" role="alert"></p>
+                </form>
+            </section>
+        </div>
+        <div class="sectionWrapper" id="nameScreen" class="hidden">
+            <section id="nameSection"></section>
+        </div>
+        <div class="sectionWrapper" id="nameSummaryScreen">
+            <section>
+                <h1>Playing:</h1>
+                <div id="playerSummary"></div>
+                <button id="gameStartButton" class="metalButton">Start Game</button>
+            </section>
+        </div>
+        <div id="gameScreen" class="hidden">
+            <div id="gameFrame"></div>
+            <p><strong>Current player: </strong><span id="currentPlayer"></span></p>
+            <div class="sectionWrapper topMargin">
+                <section id="pigBlanket">
+                    <img src="./images/trotter.gif">
+                    <img src="./images/trotter.gif">
+                </section>
+            </div>
+            <p><strong>Total score: </strong><span id="totalScore"></span></p>
+            <p><strong>Round score: </strong><span id="roundScore"></span></p>
+            <menu class="gameMenu">
+                <button id="rollButton" class="gameButton" title="Roll"><img src="./images/pig.png"></button>
+                <button id="stickButton" class="gameButton" title="Stick"><img src="./images/bank.png"></button>
+                <button id="nextPlayerButton" class="gameButton" title="Next" disabled><img src="./images/next.png"></button>
+            </menu>
+            <p id="nextPlayerMessage"></p>
+            <div id="winner" class="hidden">
+                <p id="winnerMessage"></p>
+                <button id="winnerButton">See game summary</button>
+            </div>
+        </div>
+        <section id="gameSummaryScreen" class="hidden">
+            <h1>Game summary:</h1>
+            <div class="tableWrapper">
+                <table id="gameSummary">
+                    <tr><th>Player</th><th>Score</th></tr>
+                </table>
+            </div>
+        </section>
+    </main>
     <!-- Code ends -->
     <script src="script.js"></script>
 </body>
