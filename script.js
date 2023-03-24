@@ -8,14 +8,14 @@ const rolls = {
         probability: 349,
         cumulative: 349,
         points: 0,
-        name: "Side (dot)",
+        name: "Dot",
         id: "sideDot"
     },
     sideBlank: {
         probability: 302,
         cumulative: 651,
         points: 0,
-        name: "Side (no dot)",
+        name: "Blank",
         id: "sideBlank"
     },
     razorback: {
@@ -65,7 +65,8 @@ const gameData = {
     pigs: {
         left: "trotter",
         right: "trotter"
-    }
+    },
+    scoresExpanded: false,
 }
 
 class Game {
@@ -98,11 +99,9 @@ class Player {
         const nextPlayerId = getNextPlayer(this.id);
         gameData.currentPlayer = nextPlayerId;
         return gameData.players[nextPlayerId]
-        //TODO: mechanism for going to next player?
     }
     addToRoundScore = (num) => {
         this.roundScore += num;
-        // TODO: if tempScore + permScore >= 100 - you win
     }
     
     stick = () => {
@@ -127,14 +126,17 @@ class Player {
         gameData.pigs.right = rollTwo.id;
         console.log(combinedRolls)
         console.log(gameData)
-        // TODO: update the images
+        let message = ""
         if (rollOne === rollTwo){
             // Double roll
             if (rollOne.id === "sideDot" || rollOne.id === "sideBlank"){
                 this.addToRoundScore(1);
-            } else (
-                this.addToRoundScore(rollOne.points * 4)
-            )
+                const side = (rollOne.id === "sideDot") ? "dot" : "blank";
+                message = `Double ${side} - 1 point.`;
+            } else {
+                this.addToRoundScore(rollOne.points * 4);
+                message = `Double ${rollOne.name} - ${rollOne.points * 4} points.`;
+            }
         } else {
             const rollIds = combinedRolls.map(roll => roll.id)
             if (rollIds.includes("sideDot") && rollIds.includes("sideBlank")){
@@ -143,18 +145,17 @@ class Player {
             } else {
                 this.addToRoundScore(rollOne.points);
                 this.addToRoundScore(rollTwo.points);
+                const scoringRollNames = combinedRolls.filter(roll => roll.points).map(roll => roll.name);
+                message = `${scoringRollNames.join(' and ')}: ${rollOne.points + rollTwo.points} points.`;
             }
         }
         if (this.roundScore + this.getTotalScore() > 100) {
             this.#totalScore += this.roundScore;
             return "Winner"
         }
-        
-        // }
+        return message;
         // TODO:
-        // Oinker
         // unnatural position
-        
     }
     pigOut = () => {
         this.roundScore = 0;
@@ -284,7 +285,6 @@ const createNameElement = (number, active) => {
 }
 
 const createNameElements = (numberOfPlayers) => {
-    // TODO: focus the input
     const nameSection = getEl("nameSection");
     for (let i = 0; i < numberOfPlayers; i++){
         const playerNameElement = createNameElement(i, i===0 ? true : false);
@@ -315,43 +315,83 @@ const updatePigImages = (rollResult) => {
 }
 
 const updateRoundScore = (score) => {
-    const roundScoreEl=getEl("roundScore");
-    wipeElement(roundScoreEl);
-    roundScoreEl.append(createTextNode(score));
+    updateCounter("roundCounter", score)
 }
 
-const enableNextPlayerElements = (shouldShow, message) => {
-    setElementVisible("nextPlayerMessage", shouldShow);
+const setMarquee = (message, color, stop) => {
+    const marquee = getEl("marquee");
+    marquee.stop();
+    marquee.innerHTML = message;
+    if (color){
+        marquee.style.color = color;
+    }
+    marquee.start();
+}
+
+const enableNextPlayerElements = (shouldShow, message, color) => {
+    // setElementVisible("nextPlayerMessage", shouldShow);
     getEl("nextPlayerButton").disabled = !shouldShow;
 
     if (message) {
-        const nextPlayerMessage = getEl("nextPlayerMessage");
-        wipeElement(nextPlayerMessage);
-        nextPlayerMessage.append(createTextNode(message))
+        setMarquee(message, color);
+        // const nextPlayerMessage = getEl("nextPlayerMessage");
+        // wipeElement(nextPlayerMessage);
+        // nextPlayerMessage.append(createTextNode(message))
     }
 }
 
+// COUNTERS
+
+const updateCounter = (id, number) => {
+    const paddedNumber = String(number).padStart(3, '0');
+    const counter = getEl(id);
+    const digits = Array.from(counter.children);
+    console.log(paddedNumber)
+    digits.forEach((digit, i) => {
+        digit.style.objectPosition = getCounterPixelPosition(paddedNumber[i])
+        console.log(paddedNumber[i])
+        console.log(digit.style.objectPosition)
+    })
+}
+const getCounterPixelPosition = (digit) => {
+    console.log({digit})
+    return `0px ${-12 * (Number(digit)+1)}px`
+}
+
 const updatePlayerFields = (player) => {
-    const totalScoreEl=getEl("totalScore");
     const currentPlayerEl=getEl("currentPlayer");
-    wipeElement(totalScoreEl);
     wipeElement(currentPlayerEl);
-    const totalScore = player.getTotalScore();
-    totalScoreEl.append(createTextNode(totalScore));
+    updateCounter("totalCounter", player.getTotalScore())
     currentPlayerEl.append(createTextNode(player.name));
 }
 
 const showWinnerMessage = (message) => {
+    setMarquee(message, "goldenrod")
     setElementVisible("winner", true);
-    getEl("winnerMessage").append(createTextNode(message))
     getEl("winnerButton").addEventListener("mousedown", (e) => {
-        populateScoreTable();
+        populateScoreTable("gameSummary");
         advanceScreen("gameScreen", "gameSummaryScreen");
     })
 }
 
-const populateScoreTable = () => {
-    const scoreTable = document.getElementById("gameSummary");
+const toggleScoresTab = (expandScores) => {
+    const midGameScores = getEl("midGameScores");
+    if (gameData.scoresExpanded) {
+        midGameScores.style.top = "232px";
+        midGameScores.style.height = "17px";
+        expandScores.innerHTML = "⌃ Show Scores ⌃";
+    } else {
+        populateScoreTable("midGameSummary");
+        midGameScores.style.top = "52px";
+        midGameScores.style.height = "196px";
+        expandScores.innerHTML = "⌄ Hide Scores ⌄";
+    }
+    gameData.scoresExpanded = !gameData.scoresExpanded;
+}
+
+const populateScoreTable = (elementId) => {
+    const scoreTable = document.getElementById(elementId);
+    wipeElement(scoreTable);
     gameData.players.forEach(player => {
         const playerRow = createEl("tr");
         playerRow.innerHTML = `<td>${player.name}</td><td>${player.getTotalScore()}</td>`
@@ -372,8 +412,12 @@ const createGameFrame = (playerId) => {
     let player = gameData.players[playerId];
 
     updatePigImages();
-    updateRoundScore(0);
+    updateCounter("roundCounter", 0);
     updatePlayerFields(gameData.players[playerId])
+    const expandScores = getEl("expandScores")
+    expandScores.addEventListener("mousedown", (e) => {
+        toggleScoresTab(expandScores);
+    })
 
     rollButton.addEventListener("mousedown", (e) => {
         const [leftPig, rightPig] = getEl("pigBlanket").children;
@@ -385,17 +429,18 @@ const createGameFrame = (playerId) => {
             const rollResult = player.roll()
             if (rollResult === "Oinker") {
                 enablePlayButtons(false);
-                enableNextPlayerElements(true, "Makin' bacon!");
+                enableNextPlayerElements(true, "Makin' bacon!", "red");
             }
             updateRoundScore(player.roundScore);
             updatePigImages(rollResult);
             if (rollResult === "Pig out") {
                 enablePlayButtons(false);
-                enableNextPlayerElements(true, "Pig out!");
-            }
-            if (rollResult === "Winner") {
+                enableNextPlayerElements(true, "Pig out!", "red");
+            } else if (rollResult === "Winner") {
                 enablePlayButtons(false);
                 showWinnerMessage(`${player.name} wins with ${player.getTotalScore()} points!`);
+            } else {
+                setMarquee(rollResult, "white");
             }
         }, 1000);
 
@@ -404,12 +449,14 @@ const createGameFrame = (playerId) => {
 
     stickButton.addEventListener("mousedown", (e) => {
         player.stick();
+        updateCounter("totalCounter", player.getTotalScore());
         enablePlayButtons(false);
-        enableNextPlayerElements(true, `Stuck with ${player.getTotalScore()} points.`);
+        enableNextPlayerElements(true, `Stuck with ${player.getTotalScore()} points.`, "white");
     })
 
     nextPlayerButton.addEventListener("mousedown", (e) => {
         player = player.nextPlayer();
+        setMarquee("&nbsp", "white", true)
         updatePlayerFields(player);
         updateRoundScore(0);
         enablePlayButtons(true);
@@ -429,3 +476,5 @@ const rollImage = (imageEl) => {
 }
 
 initialise();
+
+//TODO: Play again button
