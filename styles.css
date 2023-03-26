@@ -7,6 +7,10 @@
     padding: 0;
 }
 
+body {
+    overflow: hidden;
+}
+
 @font-face {
     font-family: "Pixelated MS Sans Serif";
     font-style: normal;
