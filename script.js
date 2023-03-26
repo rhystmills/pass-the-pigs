@@ -67,6 +67,7 @@ const gameData = {
         right: "trotter"
     },
     scoresExpanded: false,
+    gameOver: false
 }
 
 class Game {
@@ -374,11 +375,11 @@ const showWinnerMessage = (message) => {
     })
 }
 
-const toggleScoresTab = (expandScores) => {
+const toggleScoresTab = (expandScores, override) => {
     const midGameScores = getEl("midGameScores");
-    if (gameData.scoresExpanded) {
-        midGameScores.style.top = "232px";
-        midGameScores.style.height = "17px";
+    if (override === false && override !== true || gameData.scoresExpanded) {
+        midGameScores.style.top = gameData.gameOver ?  "250px" :"232px";
+        midGameScores.style.height = gameData.gameOver ? "0px" : "17px";
         expandScores.innerHTML = "⌃ Show Scores ⌃";
     } else {
         populateScoreTable("midGameSummary");
@@ -386,7 +387,11 @@ const toggleScoresTab = (expandScores) => {
         midGameScores.style.height = "196px";
         expandScores.innerHTML = "⌄ Hide Scores ⌄";
     }
-    gameData.scoresExpanded = !gameData.scoresExpanded;
+    if (override === true || override === false){
+        gameData.scoresExpanded = override
+    } else {
+        gameData.scoresExpanded = !gameData.scoresExpanded;
+    }
 }
 
 const populateScoreTable = (elementId) => {
@@ -438,6 +443,8 @@ const createGameFrame = (playerId) => {
                 enableNextPlayerElements(true, "Pig out!", "red");
             } else if (rollResult === "Winner") {
                 enablePlayButtons(false);
+                gameData.gameOver = true;
+                toggleScoresTab(getEl("expandScores"), false)
                 showWinnerMessage(`${player.name} wins with ${player.getTotalScore()} points!`);
             } else {
                 setMarquee(rollResult, "white");
